@@ -31,5 +31,5 @@ Indices and tables
 Members functions
 =================
 
-.. automodule:: polyhedralcubature
+.. automodule:: pypolyhedralcubature.polyhedralcubature
     :members:
