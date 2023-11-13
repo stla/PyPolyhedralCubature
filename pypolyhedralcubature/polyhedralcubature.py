@@ -1,26 +1,23 @@
 import numpy as np
-x = np.array([[1], [2]])
-x[: , 0]
-
-import pypoman
+from pypoman import compute_polytope_vertices
 from scipy.spatial import Delaunay
 from pysimplicialcubature.simplicialcubature import integrateOnSimplex, integratePolynomialOnSimplex
 from sympy import linear_eq_to_matrix
 from sympy.core.relational import And, LessThan
 
-def integrateOnPolytope(f, A, b):
-    vertices = pypoman.compute_polytope_vertices(A, b)
+def integrateOnPolytope(f, A, b, dim=1, maxEvals=10000, absError=0.0, tol=1.0e-5, rule=3):
+    vertices = compute_polytope_vertices(A, b)
     dlnay = Delaunay(vertices)
     tetrahedra = np.asarray(vertices)[dlnay.simplices]
-    return integrateOnSimplex(f, tetrahedra)
+    return integrateOnSimplex(f, tetrahedra, dim=dim, maxEvals=maxEvals, absError=absError, tol=tol, rule=rule, info=False)
 
 def integratePolynomialOnPolytope(P, A, b):
-    vertices = pypoman.compute_polytope_vertices(A, b)
+    vertices = compute_polytope_vertices(A, b)
     dlnay = Delaunay(vertices)
     tetrahedra = np.asarray(vertices)[dlnay.simplices]
     return integratePolynomialOnSimplex(P, tetrahedra)
 
-def getAb0(inequalities, symbols, required_type):
+def __getAb0(inequalities, symbols, required_type):
     # assumptions:
     # 1. all inequalities are written with the same relational: < or <= or > or >=
     # 2. For each inequality, LHS and RHS are linear in `symbols`
@@ -42,5 +39,5 @@ def getAb0(inequalities, symbols, required_type):
     return linear_eq_to_matrix(equations, symbols)
 
 def getAb(inequalities, symbols):
-    A, b = getAb0(inequalities, symbols, LessThan) 
+    A, b = __getAb0(inequalities, symbols, LessThan) 
     return np.array(A, dtype="float"), np.array(b, dtype="float")[:, 0]
