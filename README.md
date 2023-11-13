@@ -20,7 +20,7 @@ $$\left\{\begin{matrix} -5  & \leq & x & \leq & 4 \\\ -5  & \leq & y & \leq & 3-
 
 These linear inequalities define a convex polytope (in dimension 3, a 
 polyhedron). 
-In order to use the package, one has to get the *matrix-vector* representation 
+In order to use the package, one has to get the *matrix-vector representation* 
 of these inequalities, of the form
 
 $$A {(x,y,z)}' \leqslant b.$$
@@ -90,6 +90,10 @@ P = Poly(x*(x+1) - y*z**2, domain = "RR")
 integratePolynomialOnPolytope(P, A, b)
 # 57892.2750000001
 ```
+
+Actually the exact value of the integral is $57892.275$, so there is a slight 
+numerical error in the procedure.
+
 
 ## Acknowledgments
 
