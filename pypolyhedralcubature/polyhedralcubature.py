@@ -5,22 +5,23 @@ from pysimplicialcubature.simplicialcubature import (
     integrateOnSimplex,
     integratePolynomialOnSimplex,
 )
-from sympy import linear_eq_to_matrix
-from sympy.core.relational import And, LessThan
+from sympy import linear_eq_to_matrix, And, LessThan
 
 
 def integrateOnPolytope(
     f, A, b, dim=1, maxEvals=10000, absError=0.0, tol=1.0e-5, rule=3
 ):
     """
-    Integration on a simplex.
+    Integration a function over a convex polytope.
     
     Parameters
     ----------
     f : function
         The function to be integrated.
-    S : array-like
-        Simplex or simplices; a n-dimensional simplex is given as n+1 vectors of length n, the vertices.
+    A : array-like
+        matrix of the coefficients of the linear inequalities (see README for an example)
+    b: vector-like
+        vector of the upper bounds of the linear inequalities
     dim : integer
         The dimension of the values of `f`.
     maxEvals : integer
@@ -71,10 +72,47 @@ def integrateOnPolytope(
 
 
 def integratePolynomialOnPolytope(P, A, b):
+    """
+    Integration a polynomial over a convex polytope.
+    
+    Parameters
+    ----------
+    P : function
+        The function to be integrated.
+    A : array-like
+        matrix of the coefficients of the linear inequalities (see README for an example)
+    b: vector-like
+        vector of the upper bounds of the linear inequalities
+        
+    Returns
+    -------
+    number
+        The exact value of the integral of P over the polytope defined by A and b.
+        
+    Examples
+    --------
+    >>> from pypolyhedralcubature.polyhedralcubature import *
+    >>> from sympy import Poly
+    >>> from sympy.abc import x, y, z
+    >>> # integral bounds
+    >>> i1 = (x >= -5) & (x <= 4)
+    >>> i2 = (y >= -5) & (y <= 3 - x)
+    >>> i3 = (z >= -10) & (z <= 6 - x - y)
+    >>> # get matrix-vector representation of these inequalities
+    >>> A, b = getAb([i1, i2, i3], [x, y, z])
+    >>> # polynomial to integrate
+    >>> P = Poly(x*(x+1) - y*z**2, domain = "RR")
+    >>> # integral of P over the polytope defined by the bounds
+    >>> integratePolynomialOnPolytope(P, A, b)
+
+    """
     vertices = compute_polytope_vertices(A, b)
     dlnay = Delaunay(vertices)
     tetrahedra = np.asarray(vertices)[dlnay.simplices]
-    return integratePolynomialOnSimplex(P, tetrahedra)
+    integral= 0.0
+    for tetrahedron in tetrahedra:
+        integral = integral + integratePolynomialOnSimplex(P, tetrahedron)
+    return integral
 
 
 def __getAb0(inequalities, symbols, required_type):
