@@ -1,21 +1,81 @@
 import numpy as np
 from pypoman import compute_polytope_vertices
 from scipy.spatial import Delaunay
-from pysimplicialcubature.simplicialcubature import integrateOnSimplex, integratePolynomialOnSimplex
+from pysimplicialcubature.simplicialcubature import (
+    integrateOnSimplex,
+    integratePolynomialOnSimplex,
+)
 from sympy import linear_eq_to_matrix
 from sympy.core.relational import And, LessThan
 
-def integrateOnPolytope(f, A, b, dim=1, maxEvals=10000, absError=0.0, tol=1.0e-5, rule=3):
+
+def integrateOnPolytope(
+    f, A, b, dim=1, maxEvals=10000, absError=0.0, tol=1.0e-5, rule=3
+):
+    """
+    Integration on a simplex.
+    
+    Parameters
+    ----------
+    f : function
+        The function to be integrated.
+    S : array-like
+        Simplex or simplices; a n-dimensional simplex is given as n+1 vectors of length n, the vertices.
+    dim : integer
+        The dimension of the values of `f`.
+    maxEvals : integer
+        Maximum number of calls to `f`.
+    absError : number
+        Desired absolute error.
+    tol : number
+        Desired relative error.
+    rule : integer 
+        Integer between 1 and 4 corresponding to the integration rule; a 2*rule+1 degree rule will be applied.
+        
+    Returns
+    -------
+    dictionary
+        The value of the integral is in the field `"integral"` of the returned value.
+        
+    Examples
+    --------
+    >>> from pypolyhedralcubature.polyhedralcubature import *
+    >>> from sympy.abc import x, y, z
+    >>> # integral bounds
+    >>> i1 = (x >= -5) & (x <= 4)
+    >>> i2 = (y >= -5) & (y <= 3 - x)
+    >>> i3 = (z >= -10) & (z <= 6 - x - y)
+    >>> # get matrix-vector representation of these inequalities
+    >>> A, b = getAb([i1, i2, i3], [x, y, z])
+    >>> # function to integrate
+    >>> f = lambda x, y, z : x*(x+1) - y*z**2
+    >>> # integral of f on the polytope defined by the bounds
+    >>> g = lambda v : f(v[0], v[1], v[2])
+    >>> I_f = integrateOnPolytope(g, A, b)
+    >>> I_f["integral"]
+
+    """
     vertices = compute_polytope_vertices(A, b)
     dlnay = Delaunay(vertices)
     tetrahedra = np.asarray(vertices)[dlnay.simplices]
-    return integrateOnSimplex(f, tetrahedra, dim=dim, maxEvals=maxEvals, absError=absError, tol=tol, rule=rule, info=False)
+    return integrateOnSimplex(
+        f,
+        tetrahedra,
+        dim=dim,
+        maxEvals=maxEvals,
+        absError=absError,
+        tol=tol,
+        rule=rule,
+        info=False,
+    )
+
 
 def integratePolynomialOnPolytope(P, A, b):
     vertices = compute_polytope_vertices(A, b)
     dlnay = Delaunay(vertices)
     tetrahedra = np.asarray(vertices)[dlnay.simplices]
     return integratePolynomialOnSimplex(P, tetrahedra)
+
 
 def __getAb0(inequalities, symbols, required_type):
     # assumptions:
@@ -25,6 +85,7 @@ def __getAb0(inequalities, symbols, required_type):
         if type(i) != required_type:
             i = i.reversed
         return i
+
     # extract all inequalities, process them so they are all of the same type and
     # terms containing `symbols` are on the LHS.
     ineq = []
@@ -38,6 +99,7 @@ def __getAb0(inequalities, symbols, required_type):
     equations = [i.lhs - i.rhs for i in ineq]
     return linear_eq_to_matrix(equations, symbols)
 
+
 def getAb(inequalities, symbols):
-    A, b = __getAb0(inequalities, symbols, LessThan) 
+    A, b = __getAb0(inequalities, symbols, LessThan)
     return np.array(A, dtype="float"), np.array(b, dtype="float")[:, 0]
