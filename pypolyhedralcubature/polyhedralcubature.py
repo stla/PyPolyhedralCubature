@@ -129,7 +129,9 @@ def __getAb0(inequalities, symbols, required_type):
     ineq = []
     for i in inequalities:
         if isinstance(i, And):
-            ineq.extend([get_ineq_with_correct_type(a, required_type) for a in i.args])
+            ineq.extend(
+                [get_ineq_with_correct_type(a, required_type) for a in i.args]
+            )
         else:
             ineq.append(get_ineq_with_correct_type(i, required_type))
     # at this point, all inequalities should be of the same type.
@@ -139,5 +141,34 @@ def __getAb0(inequalities, symbols, required_type):
 
 
 def getAb(inequalities, symbols):
+    """
+    Get the matrix-vector representation of a set of linear inequalities.
+
+    Parameters
+    ----------
+    inequalities : list 
+        list of symbolic inequalities
+    symbols : list
+        list of symbols
+
+    Returns
+    -------
+    matrix
+        The matrix of the coefficients of the inequalities.
+    vector
+        The vector made of the bounds of the inequalities.
+
+    Examples
+    --------
+    >>> from pypolyhedralcubature.polyhedralcubature import *
+    >>> from sympy.abc import x, y, z
+    >>> # linear inequalities
+    >>> i1 = (x >= -5) & (x <= 4)
+    >>> i2 = (y >= -5) & (y <= 3 - x)
+    >>> i3 = (z >= -10) & (z <= 6 - x - y)
+    >>> # get matrix-vector representation of these inequalities
+    >>> A, b = getAb([i1, i2, i3], [x, y, z])
+
+    """
     A, b = __getAb0(inequalities, symbols, LessThan)
     return np.array(A, dtype="float"), np.array(b, dtype="float")[:, 0]
