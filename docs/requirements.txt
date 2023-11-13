@@ -1,3 +1,7 @@
 numpy
+pypoman
+scipy
+pysimplicialcubature
+sympy
 sphinxcontrib-restbuilder
 sphinxcontrib-napoleon
