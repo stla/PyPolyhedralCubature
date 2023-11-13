@@ -3,7 +3,7 @@ from pypoman import compute_polytope_vertices
 from scipy.spatial import Delaunay
 from pysimplicialcubature.simplicialcubature import (
     integrateOnSimplex,
-    integratePolynomialOnSimplex,
+    integratePolynomialOnSimplex
 )
 from sympy import linear_eq_to_matrix, And, LessThan
 
@@ -160,7 +160,7 @@ def getAb(inequalities, symbols):
 
     Examples
     --------
-    >>> from pypolyhedralcubature.polyhedralcubature import *
+    >>> from pypolyhedralcubature.polyhedralcubature import getAb
     >>> from sympy.abc import x, y, z
     >>> # linear inequalities
     >>> i1 = (x >= -5) & (x <= 4)
