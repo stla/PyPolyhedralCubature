@@ -1,12 +1,40 @@
 import numpy as np
-from pypoman import compute_polytope_vertices
+import cdd as pcdd
 from scipy.spatial import Delaunay
 from pysimplicialcubature.simplicialcubature import (
     integrateOnSimplex,
     integratePolynomialOnSimplex
 )
 from sympy import linear_eq_to_matrix, And, LessThan
+from numbers import Rational
+from sys import exit
 
+def isRationalMatrix(M):
+    m, n = np.shape(M)
+    for i in range(m):
+        for j in range(n):
+            if not isinstance(M[i, j], Rational):
+                return False
+    return True
+
+def isPolytope(Vrep):
+    firstCol = Vrep[:, 0]
+    for e in firstCol:
+        if e != 1:
+            return False
+    return True
+
+def compute_polytope_vertices(A, b):
+    M = np.hstack( (b[:, np.newaxis], -A) )
+    ntype = "fraction" if isRationalMatrix(M) else "float"
+    mat = pcdd.Matrix(M, linear=False, number_type=ntype) 
+    mat.rep_type = pcdd.RepType.INEQUALITY
+    poly = pcdd.Polyhedron(mat)
+    Vrep = np.array(poly.get_generators())
+    if not isPolytope(Vrep):
+        print("The matrix `A` and the vector `b` are not valid.")
+        exit(1)
+    return np.delete(Vrep, 0, 1)
 
 def integrateOnPolytope(
     f, A, b, dim=1, maxEvals=10000, absError=0.0, tol=1.0e-5, rule=3
@@ -109,10 +137,10 @@ def integratePolynomialOnPolytope(P, A, b):
     vertices = compute_polytope_vertices(A, b)
     dlnay = Delaunay(vertices)
     tetrahedra = np.asarray(vertices)[dlnay.simplices]
-    integral= 0.0
+    integrals = []
     for tetrahedron in tetrahedra:
-        integral = integral + integratePolynomialOnSimplex(P, tetrahedron)
-    return integral
+        integrals.append(integratePolynomialOnSimplex(P, tetrahedron))
+    return np.sum(integrals)
 
 
 def __getAb0(inequalities, symbols, required_type):
@@ -171,4 +199,4 @@ def getAb(inequalities, symbols):
 
     """
     A, b = __getAb0(inequalities, symbols, LessThan)
-    return np.array(A, dtype="float"), np.array(b, dtype="float")[:, 0]
+    return np.array(A), np.array(b)[:, 0]

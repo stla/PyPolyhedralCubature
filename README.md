@@ -11,7 +11,7 @@ ___
 This package allows to evaluate a multiple integral whose integration 
 bounds are some linear combinations of the variables, e.g.
 
-$$\int\_{-5}^4\int\_{-5}^{3-x}\int\_{-10}^{6-x-y} f(x, y, z) \text{d}z \text{d}y \text{d}x.$$
+$$\int\_{-5}^4\int\_{-5}^{3-x}\int\_{-10}^{6-x-y} f(x, y, z)\, \text{d}z\, \text{d}y\, \text{d}x.$$
 
 In other words, the domain of integration is given by a set of linear 
 inequalities:
@@ -92,8 +92,17 @@ integratePolynomialOnPolytope(P, A, b)
 ```
 
 Actually the exact value of the integral is $57892.275$, so there is a slight 
-numerical error in the procedure.
+numerical error in the procedure. We can get this exact value by using the 
+field of rational numbers as the domain of the polynomial:
 
+```python
+# polynomial to integrate
+P = Poly(x*(x+1) - y*z**2, domain = "QQ")
+# integral of P over the polytope 
+integratePolynomialOnPolytope(P, A, b)
+# 2315691/40
+```
+ 
 
 ## Acknowledgments
 
